@@ -1,10 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\SocialiteController;
 use Illuminate\Support\Facades\Route;
-use Laravel\Socialite\Facades\Socialite;
 
 Route::get('/', function () {
     return view('welcome');
@@ -20,25 +18,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::prefix('auth')->controller( SocialiteController::class)->group(function () {
 
-Route::get('/auth/redirect', function () {
-    return Socialite::driver('github')->redirect();
-})->name('auth.redirect');
+    Route::get('/{provider}/login', 'login')->name('socialite.login');
+    Route::get('/{provider}/callback', 'callback');
 
-Route::get('/auth/callback', function () {
-    $github_user = Socialite::driver('github')->user();
-
-    $user = User::updateOrCreate([
-        'name' => $github_user->getName(),
-
-    ], [
-        'email' => $github_user->getEmail(),
-        'provider_id' => $github_user->getId(),
-    ]);
-
-    Auth::login($user, true);
-
-    return to_route('dashboard');
 });
 
 require __DIR__ . '/auth.php';
